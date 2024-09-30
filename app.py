@@ -39,15 +39,17 @@ def match(job):
 
 def main():
     jobs = fetchJobs()
-    matches = []
+    matches = {}
 
     for job in jobs:
         candidates = match(job)
         job_field_of_expertise = job["field_of_expertise"]
+        job_id = job["_id"]
 
 
         for candidate in candidates:
             id = candidate['_id']
+        
             parse_years_of_experience = str(candidate["years_of_experience"])
 
             print("id: " + str(id))
@@ -59,10 +61,10 @@ def main():
             for field in field_of_expertise:
                 # Check if field in job.field_of_expertise
                 if (field in job_field_of_expertise):
-                    matches.append([job, candidates])
+                    matches[job_id].append(candidate)
+                    break
 
 
 if __name__ == "__main__":
     main()
 
-    
