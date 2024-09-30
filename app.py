@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-
+from utils import parse_years_of_experience
 
 # Connect to remote database
 try:
@@ -11,21 +11,58 @@ except Exception as e:
     print(f"Failed to connect to MongoDB: {e}")
 
 
-
+# Services that fetch data
 def fetchJobs():
     jobs = job_search_db.jobs.find().limit(1)
     return jobs
 
 def fetchCVs():
-    cvs = CV_db.CV_collection.find().limit(1)
+    cvs = CV_db.CV_collection.find().limit(10)
     return cvs
 
-jobs = fetchJobs()
-print("Printing jobs ...")
-for job in jobs:
-    print(job['title'])
+def fetchCVs(criteria):
+    cvs = CV_db.CV_collection.find(criteria)
+    return cvs
 
-cvs = fetchCVs()
-print("Printing cvs ...")
-for cv in cvs:
-    print(cv['field_of_expertise'])
+# Matches 
+def match(job):
+    min_years_experience = parse_years_of_experience(job["minimum_experience"])
+
+
+    print("Min Years Of Experience: " + str(min_years_experience))
+    
+    criteria = {"years_of_experience": {"$gte": min_years_experience}}
+    candidates = fetchCVs(criteria)
+
+    return candidates
+
+
+def main():
+    jobs = fetchJobs()
+    matches = []
+
+    for job in jobs:
+        candidates = match(job)
+        job_field_of_expertise = job["field_of_expertise"]
+
+
+        for candidate in candidates:
+            id = candidate['_id']
+            parse_years_of_experience = str(candidate["years_of_experience"])
+
+            print("id: " + str(id))
+            print( "years of experience: " + parse_years_of_experience)
+
+            # Decide if field_of_expertise 
+            field_of_expertise = candidate["field_of_expertise"]
+
+            for field in field_of_expertise:
+                # Check if field in job.field_of_expertise
+                if (field in job_field_of_expertise):
+                    matches.append([job, candidates])
+
+
+if __name__ == "__main__":
+    main()
+
+    
