@@ -93,21 +93,33 @@ class Matcher:
 
             # For each candidate that meets minimum experience years
             for candidate in candidates:
+                candidate_match = False
                 candidate_id = str(candidate['_id'])
 
                 # Verifiy that at least one of cv.field_of_expertise matches at least one jobs.field_of_expertise
                 fields_of_expertise = candidate["field_of_expertise"]
                 # print(fields_of_expertise)
 
-                for field in fields_of_expertise:
-                    # Check if field in job.field_of_expertise
-                    if (field in job_field_of_expertise):
-                        print (f"Found a match {job_id}, {candidate_id}")
-                        if job_id in matches:
-                            matches[job_id].append(candidate)
-                        else:
-                            matches[job_id] = [candidate]
-                        self.score(job_id, candidate_id, True)
+                for field in [field.strip().lower() for field in fields_of_expertise]:
+                    expertise_list = [expertise.strip().lower() for expertise in job_field_of_expertise.split(",")]
+
+                    if (candidate_match == True):
+                        candidate_match == False
                         break
+
+                    for expertise in expertise_list:
+
+                        if field == expertise.lower():
+                            print (f"Found a match {job_id}, {candidate_id}")
+
+                            if job_id in matches:
+                                matches[job_id].append(candidate)
+                            else:
+                                matches[job_id] = [candidate]
+                            self.score(job_id, candidate_id, True)
+                            candidate_match = True
+                            break   
+
+
         
         return matches

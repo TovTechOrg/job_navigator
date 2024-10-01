@@ -1,4 +1,5 @@
 from matcher import Matcher
+from utils import find_intersection_ignore_case
 
 
 matcher = Matcher()
@@ -9,8 +10,8 @@ for job_id, candidates in matches.items():
 
     job = matcher.fetch_job(job_id)
     job_fields_of_expertise = job["field_of_expertise"].split(",")
-
     # print(job_fields_of_expertise)
+    
 
     for candidate in candidates:
         print(f"\tcandidate_id: {candidate["_id"]}")
@@ -19,7 +20,8 @@ for job_id, candidates in matches.items():
         candidate_fields_of_expertise = candidate["field_of_expertise"]
         # print(candidate_fields_of_expertise)
 
-        common_fields = list(set(job_fields_of_expertise) & set(candidate_fields_of_expertise))
+       
+        common_fields = find_intersection_ignore_case(job_fields_of_expertise, candidate_fields_of_expertise)
 
         for field in common_fields:
             print(f"\tCommon field of expertise: {field}")
@@ -30,8 +32,6 @@ for job_id, candidates in matches.items():
 
         print(f"\tjob minimum years of experience: {minimum_experience}")
         print(f"\tcandidate years of experience: {years_of_experience}")
-
-
 
 
         
