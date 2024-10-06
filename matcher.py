@@ -1,5 +1,5 @@
 from pymongo import MongoClient
-from utils import parse_years_of_experience
+from utils import parse_years_of_experience, find_intersection_ignore_case
 from bson import ObjectId
 
 class Matcher:
@@ -18,7 +18,7 @@ class Matcher:
     # This method fetches all jobs
     def fetch_all_jobs(self):
         job_search_db = self.client.job_search_db
-        jobs = job_search_db.jobs.find().limit(1)
+        jobs = job_search_db.jobs.find().limit(2)
         return jobs
 
     # This method returns all CV's based on criteria
@@ -82,44 +82,27 @@ class Matcher:
         jobs = self.fetch_all_jobs()
         matches = {}
 
-        # For each job fetch candidates that meet criteria 
-        # (cv.years_of_experience >= job.minimal_experience_years
-        # cv.field_of_expertise in job.field_of_expertise
         for job in jobs:
             candidates = self.find_matching_candidates(job)
-            job_field_of_expertise = job["field_of_expertise"]
+            job_fields_of_expertise = job["field_of_expertise"].split(",")
             job_id = str(job["_id"])
 
-
+            print("Job_id: " + job_id)
             # For each candidate that meets minimum experience years
             for candidate in candidates:
-                candidate_match = False
                 candidate_id = str(candidate['_id'])
 
                 # Verifiy that at least one of cv.field_of_expertise matches at least one jobs.field_of_expertise
-                fields_of_expertise = candidate["field_of_expertise"]
-                # print(fields_of_expertise)
+                candidate_fields_of_expertise = candidate["field_of_expertise"]
+                common_fields_of_expertise =  find_intersection_ignore_case(job_fields_of_expertise, candidate_fields_of_expertise)
 
-                for field in [field.strip().lower() for field in fields_of_expertise]:
-                    expertise_list = [expertise.strip().lower() for expertise in job_field_of_expertise.split(",")]
+                if len(common_fields_of_expertise) > 0:
+                    print (f"Found a match {job_id}, {candidate_id}")
 
-                    if (candidate_match == True):
-                        candidate_match == False
-                        break
-
-                    for expertise in expertise_list:
-
-                        if field == expertise.lower():
-                            print (f"Found a match {job_id}, {candidate_id}")
-
-                            if job_id in matches:
-                                matches[job_id].append(candidate)
-                            else:
-                                matches[job_id] = [candidate]
-                            self.score(job_id, candidate_id, True)
-                            candidate_match = True
-                            break   
-
-
+                    if job_id in matches:
+                        matches[job_id].append(candidate)
+                    else:
+                        matches[job_id] = [candidate]
+                    self.score(job_id, candidate_id, True)
         
         return matches
