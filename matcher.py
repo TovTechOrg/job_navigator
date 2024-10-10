@@ -18,7 +18,7 @@ class Matcher:
     # This method fetches all jobs
     def fetch_all_jobs(self):
         job_search_db = self.client.job_search_db
-        jobs = job_search_db.jobs.find().limit(2)
+        jobs = job_search_db.jobs.find()
         return jobs
 
     # This method returns all CV's based on criteria
@@ -85,19 +85,23 @@ class Matcher:
         for job in jobs:
             candidates = self.find_matching_candidates(job)
             job_fields_of_expertise = job["field_of_expertise"].split(",")
+            job_education_list = job["education"].split(",")
             job_id = str(job["_id"])
 
-            print("Job_id: " + job_id)
+            # print("Job_id: " + job_id)
             # For each candidate that meets minimum experience years
             for candidate in candidates:
                 candidate_id = str(candidate['_id'])
 
                 # Verifiy that at least one of cv.field_of_expertise matches at least one jobs.field_of_expertise
                 candidate_fields_of_expertise = candidate["field_of_expertise"]
+                candidate_education_list = candidate["Education"].split(",")
+
+                common_education_list = find_intersection_ignore_case(job_education_list, candidate_education_list)
                 common_fields_of_expertise =  find_intersection_ignore_case(job_fields_of_expertise, candidate_fields_of_expertise)
 
-                if len(common_fields_of_expertise) > 0:
-                    print (f"Found a match {job_id}, {candidate_id}")
+                if any(common_fields_of_expertise) and any(common_education_list):
+                    # print (f"Found a match {job_id}, {candidate_id}")
 
                     if job_id in matches:
                         matches[job_id].append(candidate)
